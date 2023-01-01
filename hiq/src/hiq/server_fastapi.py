@@ -26,7 +26,7 @@ class FastAPIReqIdGenerator(object):
         return correlation_id.get()
 
 
-def run_fastapi(app, driver=None, header_name='X-Request-ID'):
+def run_fastapi(app, driver=None, header_name='X-Request-ID', host='0.0.0.0', port=8080):
     from asgi_correlation_id import CorrelationIdMiddleware
     from uuid import uuid4
     # from asgi_correlation_id.middleware import is_valid_uuid4
@@ -75,7 +75,7 @@ def run_fastapi(app, driver=None, header_name='X-Request-ID'):
         return HTMLResponse(content=html_resp, status_code=200)
 
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host=host, port=port)
 
 
 def get_corr_id():

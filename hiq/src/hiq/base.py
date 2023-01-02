@@ -1,4 +1,4 @@
-# HiQ version 1.0.5
+# HiQ version 1.1.0
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/ 
@@ -160,7 +160,7 @@ class HiQBase(itree.ForestStats, LogMonkeyKing):
                 else i[3]
             )
             if i[3] in tag_names:
-                raise ValueError("🦉 duplicated tag: {i[3]} in tau input!")
+                raise ValueError(f"🦉 duplicated tag: {i[3]} in tau input!")
             if not re.match(r"^\w+$", i[3]):
                 raise ValueError(
                     "🦉 only alpha numerics are allowed in tag but got: {i[3]}!"

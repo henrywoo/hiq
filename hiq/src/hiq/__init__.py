@@ -1,4 +1,4 @@
-# HiQ version 1.0.5
+# HiQ version 1.1.0
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/ 
@@ -7,7 +7,7 @@
 __author__ = "Fuheng Wu<fuheng.wu@oralce.com>"
 __date__ = "2023-01-01"
 __doc__ = "HiQ is a declarative, non-intrusive, dynamic and transparent tracking and optimization system"
-__version__ = "1.0.5"
+__version__ = "1.1.0"
 __credits__ = "Henry Wu, Ivan Davchev, Jun Qian"
 
 import sys

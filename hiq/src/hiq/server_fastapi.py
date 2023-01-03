@@ -1,4 +1,4 @@
-# HiQ version 1.1.0
+# HiQ version 1.1.1
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
@@ -37,6 +37,43 @@ def run_fastapi(app, driver=None, header_name='X-Request-ID', host='0.0.0.0', po
                        # validator=is_valid_uuid4
                        )
 
+    @app.get("/hiq")
+    async def hiq_report():
+        from fastapi.responses import HTMLResponse
+        if not driver:
+            return ""
+        r = driver.get_k0s_summary()
+        tmp=[]
+        for k, span, start, end in r:
+            s = f'<tr><td><a href=latency/{k}>🟢 {k}</a><td align=right>{span}<td align=right>{hiq.ts_to_dt(start)}<td align=right>{hiq.ts_to_dt(end)}'
+            tmp.append(s)
+        resp = '<table width=100%><tr><td width=50% align=left>Req ID<td align=right>Latency<td align=right>Start<td align=right>End' + '\n'.join(tmp) + "</table>"
+        html_resp = f"""
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                      <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+                  </head>
+                  <body class="bg-white">
+                    <section style='font-family: monospace, Times, serif;'>
+                        <div class="container mx-auto">
+                            <div class="flex flex-col flex-wrap pb-6 mb-2 text-black ">
+                                <h1 class="mb-2 text-3xl font-medium text-black">
+                                    Request Latency Report
+                                </h1>
+                                <p class="text-xl leading-relaxed"> HiQ </p> </div> <div class="flex flex-wrap 
+                                items-end justify-start w-full transition duration-500 ease-in-out transform bg-white 
+                                border-2 border-gray-600 rounded-lg hover:border-white "> <div class="w-full"> <div 
+                                class="relative flex flex-col h-full p-8 text-sm"> <pre>{resp}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                  </body>
+                </html>
+                """
+        return HTMLResponse(content=html_resp, status_code=200)
+
     @app.get("/latency/{req_id}")
     async def latency(req_id: str):
         if not driver:
@@ -44,34 +81,29 @@ def run_fastapi(app, driver=None, header_name='X-Request-ID', host='0.0.0.0', po
         from fastapi.responses import HTMLResponse
 
         t = driver.get_metrics_by_k0(req_id)
-        resp = t.get_graph().replace('\n', '<br>').replace(' ', '&nbsp') if t else f"Error: The reqeust id({req_id}) " \
-                                                                                   f"is invalid!"
+        resp = t.get_graph(FORMAT_DATETIME) if t else f"Error: The reqeust id({req_id}) is invalid!"
         html_resp = f"""
         <!DOCTYPE html>
         <html>
           <head>
               <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
           </head>
-          <body class="bg-black">
+          <body class="bg-white">
             <section style='font-family: monospace, Times, serif;'>
-                <div class="container px-5 py-12 mx-auto lg:px-20">
-                    <div class="flex flex-col flex-wrap pb-6 mb-12 text-white ">
-                        <h1 class="mb-12 text-3xl font-medium text-white">
+                <div class="container mx-auto">
+                    <div class="flex flex-col flex-wrap pb-6 mb-2 text-black ">
+                        <h1 class="mb-2 text-3xl font-medium text-black">
                             Request Latency Report
                         </h1>
-                        <p class="text-xl leading-relaxed">Request Id: {req_id}</p> </div> <div class="flex flex-wrap 
-                        items-end justify-start w-full transition duration-500 ease-in-out transform bg-black 
-                        border-2 border-gray-600 rounded-lg hover:border-white "> <div class="w-full"> <div 
-                        class="relative flex flex-col h-full p-8 "> <p class="flex items-center mb-2 text-lg 
-                        font-normal tracking-wide text-white"> {resp}
-                            </p>
-                        </div>
+                        <p class="text-xl leading-relaxed">Request Id: {req_id}</p>
                     </div>
-                </div>
-            </section>
-          </body>
-        </html>
-        """
+                    <div class="flex flex-wrap 
+                        items-end justify-start w-full transition duration-500 ease-in-out transform bg-white 
+                        border-2 border-gray-600 rounded-lg hover:border-white "> <div class="w-full"> <div 
+                        class="relative flex flex-col h-full p-8 text-sm"> <pre>{resp}</pre> </div> </div> <div 
+                        class="w-full xl:w-1/4 md:w-1/4 lg:ml-auto"> <div class="relative flex flex-col h-full p-8"> 
+                        <button class="w-full px-4 py-2 mx-auto mt-3"> <a href="../hiq">Back to HiQ Report Home 🏠</a> </button> </div> </div> 
+                        </div> </section> </body> </html>"""
         return HTMLResponse(content=html_resp, status_code=200)
 
     import uvicorn

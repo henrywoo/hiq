@@ -4,6 +4,9 @@ from hiq.framework.onnxruntime import OrtHiQLatency
 
 class MyFastAPI(hiq.HiQFastAPILatencyMixin, OrtHiQLatency):
 
+    def __init__(self):
+        super().__init__(extra_metrics={hiq.ExtraMetrics.ARGS})
+
     def custom(self):
         @self.inserter
         def predict(request) -> int:

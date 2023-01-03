@@ -1,4 +1,4 @@
-# HiQ version 1.1.0
+# HiQ version 1.1.1
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/ 
@@ -525,6 +525,18 @@ class HiQBase(itree.ForestStats, LogMonkeyKing):
         r = []
         for k0 in s.tau:
             r.append(s.tau[k0][metrics_key])
+        return r
+
+    def get_k0s(s) -> List[str]:
+        return s.tau.keys()
+
+    def get_k0s_summary(s, metrics_key=KEY_LATENCY) -> List[Tuple]:
+        ks = s.tau.keys()
+        r = []
+        for k0 in ks:
+            t = s.tau[k0][metrics_key]
+            t.consolidate()
+            r.append((k0, t.root.span(), t.root.start, t.root.end))
         return r
 
     def get_metrics_by_k0(s, k0=None, metrics_key=KEY_LATENCY) -> Union[Tree, None]:

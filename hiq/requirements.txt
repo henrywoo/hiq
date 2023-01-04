@@ -4,7 +4,6 @@ PyYAML
 cachetools
 psutil
 py-itree
-asgi-correlation-id
 urllib3
 
 # basic libs

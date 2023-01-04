@@ -7,6 +7,10 @@
 import psutil
 
 
+def get_memory_gb() -> float:
+    return psutil.Process().memory_info().rss / (1024 * 1024 * 1024)
+
+
 def get_memory_mb() -> float:
     """Get RSS in MB unit
 

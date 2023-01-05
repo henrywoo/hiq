@@ -113,7 +113,7 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
     def not_implemented_func():
         return "NOT_IMPLEMENTED"
 
-    for k, v in custom:
+    for k, v in custom.items():
         app.get(k)(not_implemented_func if v is None else v)
 
     @app.get("/hiq_enable")

@@ -13,5 +13,5 @@ urllib3
 #matplotlib
 #numpy
 #prometheus-client
-#fastapi, uvicorn, pandas
+#fastapi, uvicorn, pandas, Jinja2
 #flask

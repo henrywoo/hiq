@@ -39,7 +39,7 @@ def _predict(request):
     return {"result": str(res[0].shape)}
 
 
-@app.get("/")
+@app.get("/predict")
 async def predict(request: Request):
     return _predict(request)
 

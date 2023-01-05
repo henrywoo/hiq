@@ -18,30 +18,97 @@ from hiq.hiq_utils import (
     get_tau_id,
 )
 
+from contextvars import ContextVar
+from typing import *
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Callable, Optional
+from uuid import UUID, uuid4
+
+from starlette.datastructures import Headers, MutableHeaders
+
+# Middleware
+correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
+
+if TYPE_CHECKING:
+    from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+
+def is_valid_uuid4(uuid_: str) -> bool:
+    """
+    Check whether a string is a valid v4 uuid.
+    """
+    try:
+        return bool(UUID(uuid_, version=4))
+    except ValueError:
+        return False
+
+
+FAILED_VALIDATION_MESSAGE = 'Generated new request ID (%s), since request header value failed validation'
+
+
+@dataclass
+class CorrelationIdMiddleware:
+    app: 'ASGIApp'
+    header_name: str = 'X-Request-ID'
+
+    async def __call__(self, scope: 'Scope', receive: 'Receive', send: 'Send') -> None:
+        """
+        Load request ID from headers if present. Generate one otherwise.
+        """
+        if scope['type'] != 'http':
+            await self.app(scope, receive, send)
+            return
+
+        async def handle_outgoing_request(message: 'Message') -> None:
+            if message['type'] == 'http.response.start' and correlation_id.get():
+                headers = MutableHeaders(scope=message)
+                headers.append(self.header_name, correlation_id.get())
+                headers.append('Access-Control-Expose-Headers', self.header_name)
+
+            await send(message)
+
+        await self.app(scope, receive, handle_outgoing_request)
+
+    def __post_init__(self) -> None:
+        pass
+
 
 class FastAPIReqIdGenerator(object):
     def __call__(self):
-        from asgi_correlation_id.context import correlation_id
-
         return correlation_id.get()
 
-def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=8080, worker=1):
-    from asgi_correlation_id import CorrelationIdMiddleware
-    from uuid import uuid4
-    # from asgi_correlation_id.middleware import is_valid_uuid4
 
+g_cpu_info = None
+
+from uuid import uuid4
+
+
+def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=8080, worker=1,
+                endpoints={'predict'},
+                generator=lambda: uuid4().hex,
+                templates_dir="templates"):
     from fastapi import Request
     from fastapi.templating import Jinja2Templates
 
-    from typing import Optional, Any
-    from pathlib import Path
-    TEMPLATES = Jinja2Templates(directory="templates")
+    try:
+        templates = Jinja2Templates(directory=templates_dir)
+    except:
+        templates = None
 
-    app.add_middleware(CorrelationIdMiddleware,
-                       header_name=header_name,
-                       generator=lambda: uuid4().hex,
-                       # validator=is_valid_uuid4
-                       )
+    app.add_middleware(CorrelationIdMiddleware, header_name=header_name)
+
+    @app.middleware("http")
+    async def add_latency_header(request: Request, call_next):
+        if str(request.url).split('/')[-1] in endpoints:
+            cid = request.headers.get(header_name) if header_name in request.headers else generator()
+            correlation_id.set(cid)
+            start_time = time.monotonic()
+            response = await call_next(request)
+            response.headers["X-latency"] = str(time.monotonic() - start_time)
+            return response
+        else:
+            return await call_next(request)
+
     @app.get("/hiq_enable")
     async def hiq_enable():
         if not driver:
@@ -71,28 +138,33 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
     async def hiq_data():
         if not driver:
             return ""
-        if not os.path.exists("hiq.json"):
+        if not os.path.exists("hiq.css"):
             return hiq.mod('fastapi').responses.Response("")
         return hiq.mod('fastapi').responses.FileResponse('hiq.css')
 
     @app.get("/plot")
     async def plot(request: Request) -> dict:
-        if not driver:
+        if not driver or not os.path.exists(templates_dir)or not templates:
             return ""
-        return TEMPLATES.TemplateResponse("index.html", {"request": request})
+        return templates.TemplateResponse("index.html", {"request": request})
 
     @app.get("/hiq")
     async def hiq_report():
+        global g_cpu_info
         from fastapi.responses import HTMLResponse
         import cpuinfo
+
+        if not g_cpu_info:
+            g_cpu_info = cpuinfo.get_cpu_info()["brand_raw"]
         if not driver:
             return ""
         r = driver.get_k0s_summary()
-        tmp=[]
+        tmp = []
         for k, span, start, end in r:
-            s = f'<tr><td><a href=latency/{k}>🟢 {k}</a><td align=right>{span}<td align=right>{hiq.ts_to_dt(start)}<td align=right>{hiq.ts_to_dt(end)}'
+            s = f'<tr><td><a href=latency/{k}>🌲 {k}</a><td align=right>{span}<td align=right>{hiq.ts_to_dt(start)}<td align=right>{hiq.ts_to_dt(end)}'
             tmp.append(s)
-        resp = '<table width=100%><tr><td width=50% align=left>Req ID<td align=right>Latency<td align=right>Start<td align=right>End' + '\n'.join(tmp) + "</table>"
+        resp = '<table width=100%><tr><td width=50% align=left>Req ID<td align=right>Latency<td align=right>Start<td align=right>End' + '\n'.join(
+            tmp) + "</table>"
 
         html_resp = f"""
                 <!DOCTYPE html>
@@ -111,7 +183,7 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
                                 </h1>
                                 <p class="text-sm">
                                 HiQ: {'🟢Enabled' if driver.enabled else '🔴Disabled'},
-                                CPU: {cpuinfo.get_cpu_info()["brand_raw"]},
+                                CPU: {g_cpu_info},
                                 Load: {os.getloadavg()[0]:.2f},
                                 Memory: {hiq.memory.get_memory_gb():.2f}GB </p> </div>
                                 <div class="flex flex-wrap 

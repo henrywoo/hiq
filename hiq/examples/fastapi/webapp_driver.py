@@ -7,7 +7,6 @@ class MyFastAPI(hiq.HiQFastAPILatencyMixin, OrtHiQLatency):
     def __init__(self):
         super().__init__(extra_metrics={hiq.ExtraMetrics.ARGS})
 
-
     def custom(self):
         @self.inserter
         def predict(request) -> int:
@@ -21,5 +20,6 @@ class MyFastAPI(hiq.HiQFastAPILatencyMixin, OrtHiQLatency):
     def custom_disable(self):
         hiq.mod("webapp")._predict = self.o_predict
         OrtHiQLatency.custom_disable(self)
+
 
 hiq.run_fastapi(driver=MyFastAPI(), app=hiq.mod("webapp").app)

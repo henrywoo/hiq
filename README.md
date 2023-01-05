@@ -118,17 +118,6 @@ HiQ welcomes contributions from the community. Before submitting a pull request,
 Please consult the [🔗 security guide](./SECURITY.md) for our responsible security vulnerability disclosure process.
 
 
-## Change Log
-
-### v1.0.3
-
-- add non-intrusive auto instrumentation for flask: HiQFlaskLatencyOtel ([🔗 example](https://github.com/oracle-samples/hiq/tree/main/hiq/examples/flask))
-- upgrade dependencies
-
-### v1.0.2
-
-- add non-intrusive auto instrumentation for Onnxruntime, Paddlepaddle, PaddleOCR
-
 ## License
 
 Copyright (c) 2022 Oracle and/or its affiliates. Released under the Universal Permissive License v1.0 as shown at <https://oss.oracle.com/licenses/upl/>.
@@ -140,7 +129,7 @@ Copyright (c) 2022 Oracle and/or its affiliates. Released under the Universal Pe
 [cov-img]: https://codecov.io/gh/uber/athenadriver/branch/master/graph/badge.svg
 [cov]: https://hiq.readthedocs.io/en/latest/index.html
 
-[release-img]: https://img.shields.io/badge/release-v1.0.3-red
+[release-img]: https://img.shields.io/badge/release-v1.1.4-red
 [release]: https://github.com/oracle-samples/hiq
 
 [license-img]: https://img.shields.io/badge/License-UPL--1.0-red

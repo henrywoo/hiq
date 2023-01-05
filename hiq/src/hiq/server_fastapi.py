@@ -86,7 +86,8 @@ from uuid import uuid4
 def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=8080, worker=1,
                 endpoints={'predict'},
                 generator=lambda: uuid4().hex,
-                templates_dir="templates"):
+                templates_dir="templates",
+                custom={"/custom": None}):
     from fastapi import Request
     from fastapi.templating import Jinja2Templates
 
@@ -108,6 +109,12 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
             return response
         else:
             return await call_next(request)
+
+    def not_implemented_func():
+        return "NOT_IMPLEMENTED"
+
+    for k, v in custom:
+        app.get(k)(not_implemented_func if v is None else v)
 
     @app.get("/hiq_enable")
     async def hiq_enable():

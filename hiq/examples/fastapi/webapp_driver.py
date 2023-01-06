@@ -22,4 +22,4 @@ class MyFastAPI(hiq.HiQFastAPILatencyMixin, OrtHiQLatency):
         OrtHiQLatency.custom_disable(self)
 
 
-hiq.run_fastapi(driver=MyFastAPI(), app=hiq.mod("webapp").app)
+hiq.run_fastapi(driver=MyFastAPI(), app=hiq.mod("webapp").app, header_name="hello")

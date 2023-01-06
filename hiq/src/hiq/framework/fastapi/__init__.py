@@ -1,4 +1,4 @@
-# HiQ version 1.1.5
+# HiQ version 1.1.6rc0
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
@@ -9,28 +9,21 @@ import time
 import hiq
 from hiq import HiQLatency, HiQMemory
 from hiq.constants import *
-from hiq.hiq_utils import func_args_handler
 from hiq.memory import get_memory_mb
-
-from typing import Union, Callable, List
-from hiq.hiq_utils import (
-    func_args_handler,
-    get_tau_id,
-)
+from hiq.hiq_utils import func_args_handler
 
 from contextvars import ContextVar
 from typing import *
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Optional
 from uuid import UUID, uuid4
-
-from starlette.datastructures import Headers, MutableHeaders
 
 # Middleware
 correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
 
-if TYPE_CHECKING:
-    from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+# if TYPE_CHECKING:
+#    from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 def is_valid_uuid4(uuid_: str) -> bool:
@@ -61,6 +54,7 @@ class CorrelationIdMiddleware:
 
         async def handle_outgoing_request(message: 'Message') -> None:
             if message['type'] == 'http.response.start' and correlation_id.get():
+                from starlette.datastructures import MutableHeaders
                 headers = MutableHeaders(scope=message)
                 headers.append(self.header_name, correlation_id.get())
                 headers.append('Access-Control-Expose-Headers', self.header_name)
@@ -79,17 +73,23 @@ class FastAPIReqIdGenerator(object):
 
 
 g_cpu_info = None
-
-from uuid import uuid4
+here = os.path.dirname(os.path.realpath(__file__))
+g_templates_dir = f"{here}/templates"
+fstr_hiq = hiq.read_file(f"{g_templates_dir}/hiq.html", by_line=False)
+fstr_lat = hiq.read_file(f"{g_templates_dir}/lat.html", by_line=False)
 
 
 def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=8080, worker=1,
-                endpoints={'predict'},
+                endpoints={'/predict'},
                 generator=lambda: uuid4().hex,
-                templates_dir="templates",
-                custom={"/custom": None}):
+                templates_dir=g_templates_dir,
+                custom={"/custom": ('get', None)}):
     from fastapi import Request
     from fastapi.templating import Jinja2Templates
+
+    app.title = "Document OCR"
+    app.description = f"<a href=hiq>HiQ</a>"
+    app.version = "1.0.0"
 
     try:
         templates = Jinja2Templates(directory=templates_dir)
@@ -100,7 +100,8 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
 
     @app.middleware("http")
     async def add_latency_header(request: Request, call_next):
-        if str(request.url).split('/')[-1] in endpoints:
+        ep = '/' + str(request.url).split('/')[-1]
+        if ep in endpoints or ep in custom.keys():
             cid = request.headers.get(header_name) if header_name in request.headers else generator()
             correlation_id.set(cid)
             start_time = time.monotonic()
@@ -114,7 +115,10 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
         return "NOT_IMPLEMENTED"
 
     for k, v in custom.items():
-        app.get(k)(not_implemented_func if v is None else v)
+        try:
+            getattr(app, v[0])(k)(not_implemented_func if v[1] is None else v[1])
+        except AttributeError as e:
+            print(f"warning: {e}")
 
     @app.get("/hiq_enable")
     async def hiq_enable():
@@ -130,30 +134,9 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
         if not driver:
             return ""
         driver.disable_hiq()
+
         from fastapi.responses import RedirectResponse
         return RedirectResponse(url='/hiq')
-
-    @app.get("/data.json")
-    async def hiq_data():
-        if not driver:
-            return "[]"
-        if not os.path.exists("data.json"):
-            return hiq.mod('fastapi').responses.Response("")
-        return hiq.mod('fastapi').responses.FileResponse('data.json')
-
-    @app.get("/hiq.css")
-    async def hiq_data():
-        if not driver:
-            return ""
-        if not os.path.exists("hiq.css"):
-            return hiq.mod('fastapi').responses.Response("")
-        return hiq.mod('fastapi').responses.FileResponse('hiq.css')
-
-    @app.get("/plot")
-    async def plot(request: Request) -> dict:
-        if not driver or not os.path.exists(templates_dir)or not templates:
-            return ""
-        return templates.TemplateResponse("index.html", {"request": request})
 
     @app.get("/hiq")
     async def hiq_report():
@@ -173,37 +156,13 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
         resp = '<table width=100%><tr><td width=50% align=left>Req ID<td align=right>Latency<td align=right>Start<td align=right>End' + '\n'.join(
             tmp) + "</table>"
 
-        html_resp = f"""
-                <!DOCTYPE html>
-                <html>
-                  <head>
-                      <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-                      <link rel="stylesheet" href="https://leeoniya.github.io/uPlot/dist/uPlot.min.css">
-                      <script src="https://leeoniya.github.io/uPlot/dist/uPlot.iife.min.js"></script>
-                  </head>
-                  <body class="bg-white">
-                    <section style='font-family: monospace, Times, serif;'>
-                        <div class="container py-12 mx-auto">
-                            <div class="flex flex-col flex-wrap pb-6 mb-2 text-black ">
-                                <h1 class="mb-2 text-3xl font-medium text-black">
-                                    Request Latency Report
-                                </h1>
-                                <p class="text-sm">
-                                HiQ: {'🟢Enabled' if driver.enabled else '🔴Disabled'},
-                                CPU: {g_cpu_info},
-                                Load: {os.getloadavg()[0]:.2f},
-                                Memory: {hiq.memory.get_memory_gb():.2f}GB </p> </div>
-                                <div class="flex flex-wrap 
-                                items-end justify-start w-full transition duration-500 ease-in-out transform bg-white 
-                                border-2 border-gray-600 rounded-lg hover:border-white "> <div class="w-full"> <div 
-                                class="relative flex flex-col h-full p-8 text-sm"> <pre>{resp}</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                  </body>
-                </html>
-                """
+        basic_info = f'''
+        HiQ: {'🟢Enabled' if driver.enabled else '🔴Disabled'},
+                                        CPU: {g_cpu_info},
+                                        Load: {os.getloadavg()[0]:.2f},
+                                        Memory: {hiq.memory.get_memory_gb():.2f}GB
+        '''
+        html_resp = fstr_hiq.format(hiq_version=hiq.__version__, basic_info=basic_info, latency=resp)
         return HTMLResponse(content=html_resp, status_code=200)
 
     @app.get("/latency/{req_id}")
@@ -214,28 +173,7 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
 
         t = driver.get_metrics_by_k0(req_id if req_id != 'None' else None)
         resp = t.get_graph(FORMAT_DATETIME) if t else f"Error: The reqeust id({req_id}) is invalid!"
-        html_resp = f"""
-        <!DOCTYPE html>
-        <html>
-          <head>
-              <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-          </head>
-          <body class="bg-white">
-            <section style='font-family: monospace, Times, serif;'>
-                <div class="container py-12 mx-auto">
-                    <div class="flex flex-col flex-wrap pb-6 mb-2 text-black ">
-                        <h1 class="mb-2 text-3xl font-medium text-black">
-                            Request Latency Report
-                        </h1>
-                        <p class="text-xl leading-relaxed">Request Id: {req_id}</p>
-                    </div>
-                    <div class="flex flex-wrap 
-                        items-end justify-start w-full transition duration-500 ease-in-out transform bg-white 
-                        border-2 border-gray-600 rounded-lg hover:border-white "> <div class="w-full"> <div 
-                        class="relative flex flex-col h-full p-8 text-sm"> <pre>{resp}</pre> </div> </div> <div 
-                        class="w-full xl:w-1/4 md:w-1/4 lg:ml-auto"> <div class="relative flex flex-col h-full p-8"> 
-                        <button class="w-full px-4 py-2 mx-auto mt-3"> <a href="../hiq">Back to HiQ Report Home 🏠</a> </button> </div> </div> 
-                        </div> </section> </body> </html>"""
+        html_resp = fstr_lat.format(hiq_version=hiq.__version__, req_id=req_id if req_id != 'None' else '-', latency=resp)
         return HTMLResponse(content=html_resp, status_code=200)
 
     import uvicorn

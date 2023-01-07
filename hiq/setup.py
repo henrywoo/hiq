@@ -148,13 +148,25 @@ https://oss.oracle.com/licenses/upl/.
    :target: https://hiq.readthedocs.io/en/latest/
 .. |CodeCov| image:: https://codecov.io/gh/uber/athenadriver/branch/master/graph/badge.svg
    :target: https://github.com/oracle-samples/hiq
-.. |Github release| image:: https://img.shields.io/badge/release-v1.1.5-red
+.. |Github release| image:: https://img.shields.io/badge/release-v1.1.6rc1-red
    :target: https://github.com/oracle-samples/hiq
 .. |lic| image:: https://img.shields.io/badge/License-UPL--1.0-red
    :target: https://github.com/oracle-samples/hiq/blob/main/LICENSE.txt
 """
 
+"""
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            if not str(filename).endswith('.pyc'):
+                paths.append(os.path.join(path, filename))
+    return paths
 
+extra_files = package_files('src/hiq/framework/')
+print(extra_files)
+import sys; sys.dont_write_bytecode = True
+"""
 setup(
     name="hiq-python",
     version=VERSION,
@@ -175,6 +187,7 @@ setup(
     ],
     packages=packages,
     package_dir={"": "src"},
-    package_data={"hiq": ["data/*.pk", "framework/*"]},
+    package_data={"hiq": ["data/*.pk"] #+ extra_files
+                },
     url="https://github.com/oracle-samples/hiq",
 )

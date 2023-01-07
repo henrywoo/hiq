@@ -4,7 +4,7 @@ import os
 here = os.path.dirname(os.path.realpath(__file__))
 
 VERSION = (
-    "1.1.6rc0"
+    "1.1.6rc1"
     if "PKG_VERSION" not in os.environ or not os.environ["PKG_VERSION"]
     else os.environ["PKG_VERSION"]
 )
@@ -154,19 +154,19 @@ https://oss.oracle.com/licenses/upl/.
    :target: https://github.com/oracle-samples/hiq/blob/main/LICENSE.txt
 """
 
-"""
-def package_files(directory):
+
+def package_files(ds):
     paths = []
-    for (path, directories, filenames) in os.walk(directory):
-        for filename in filenames:
-            if not str(filename).endswith('.pyc'):
-                paths.append(os.path.join(path, filename))
+    for d in ds:
+        for (path, directories, filenames) in os.walk(d):
+            for filename in filenames:
+                if '__pycache__' not in str(filename):
+                    paths.append(str(os.path.join(path, filename))[len('src/hiq/'):])
     return paths
 
-extra_files = package_files('src/hiq/framework/')
-print(extra_files)
-import sys; sys.dont_write_bytecode = True
-"""
+extra_files = package_files(['src/hiq/'])
+
+
 setup(
     name="hiq-python",
     version=VERSION,
@@ -187,7 +187,7 @@ setup(
     ],
     packages=packages,
     package_dir={"": "src"},
-    package_data={"hiq": ["data/*.pk"] #+ extra_files
+    package_data={"hiq": extra_files
                 },
     url="https://github.com/oracle-samples/hiq",
 )

@@ -61,9 +61,11 @@ from .tree import (
 
 try:
     from .memory import (
+        get_memory_gb,
         get_memory_mb,
         get_memory_kb,
         get_memory_b,
+        get_system_peak_memory
     )
 except ImportError:
     pass

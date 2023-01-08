@@ -1,4 +1,4 @@
-# HiQ version 1.1.6rc1
+# HiQ version 1.1.6rc2
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
@@ -176,6 +176,7 @@ def ts_pair_to_dt(t1: float, t2: float) -> str:
         return f"{p1[0]} {p1[1]} - {p2[1]}"
     return f"{s1} - {s2}"
 
+
 def get_time_by_time_zone(time_zone="US/Pacific") -> datetime:
     import pytz
     return datetime.now(tz=pytz.utc).astimezone(pytz.timezone(time_zone))
@@ -188,6 +189,7 @@ def get_time_str_with_tz(time_zone="US/Pacific") -> str:
     date = date.astimezone(pytz.timezone(time_zone))
     pst_datetime = date.strftime(date_format)
     return pst_datetime
+
 
 def _get_args_spec(args_spec) -> Tuple[str, str]:
     x = args_spec.args
@@ -1062,16 +1064,19 @@ def get_files_by_type(
         print(f"😱 big number of files: {len(res)}")
     return res
 
+
 HEADERS = {"client-id": "hiq-client", "Content-Type": "application/json"}
+
+
 def __send_http(
-    url,
-    data,
-    auth=None,
-    headers=HEADERS,
-    timeout=60,
-    trust_env=True,
-    enable_proxy=True,
-    method="get",
+        url,
+        data,
+        auth=None,
+        headers=HEADERS,
+        timeout=60,
+        trust_env=True,
+        enable_proxy=True,
+        method="get",
 ):
     try:
         session = requests.Session()
@@ -1089,18 +1094,20 @@ def __send_http(
         traceback.print_exc(file=sys.stdout)
         raise e
 
+
 def post_http(
-    url,
-    data,
-    auth=None,
-    headers=HEADERS,
-    timeout=60,
-    trust_env=True,
-    enable_proxy=True,
+        url,
+        data,
+        auth=None,
+        headers=HEADERS,
+        timeout=60,
+        trust_env=True,
+        enable_proxy=True,
 ):
     return __send_http(
         url, data, auth, headers, timeout, trust_env, enable_proxy, method='post'
     )
+
 
 def get_average_loss(a, b):
     import numpy as np
@@ -1124,6 +1131,7 @@ def get_percentage_loss(a, b):
             return r
     delta = np.abs(a - b)
     return np.abs(np.sum(delta) / np.sum(a))
+
 
 if __name__ == "__main__":
     import requests

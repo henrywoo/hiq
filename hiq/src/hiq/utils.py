@@ -1010,7 +1010,7 @@ ALL_IMG_DOC_TYPES = DEFAULT_IMG_TYPES + ["*.webp", "*.pdf"]
 
 
 def get_files_by_type(
-        folder_path="img",
+        folder_path=os.getcwd(),
         types=ALL_IMG_DOC_TYPES,
         include_folder_name=False,
         sorting=True,
@@ -1024,7 +1024,7 @@ def get_files_by_type(
     """Get file dataset as a list of (fsize, file, file_name )
 
     ```
-    for fsize, image_file, image_name in image_files:
+    for fsize, image_name, image_file in image_files:
         ...
     ```
     Args:
@@ -1032,7 +1032,7 @@ def get_files_by_type(
         types (tuple, optional): [description]. Defaults to ALL_IMG_DOC_TYPES.
 
     Returns:
-        [type]: [description]
+        List[Tuple(str)]: a list of file information tuple
     """
     import glob
     files_grabbed = []
@@ -1041,7 +1041,7 @@ def get_files_by_type(
             files_grabbed.extend(glob.glob(f"{folder_path}/**/{t}", recursive=recursive))
 
     res = []
-    for file_path in files_grabbed:
+    for file_path in set(files_grabbed):
         file_size = os.path.getsize(file_path)
         tmp = file_path.split("/")
         if len(tmp) < 2:

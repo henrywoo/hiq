@@ -45,7 +45,8 @@ from .utils import (
     execute_cmd,
     get_home,
     create_gantt_chart_time,
-    create_gantt_chart_memory
+    create_gantt_chart_memory,
+    get_files_by_type
 )
 from .tree import (
     get_duration_from_hiq_string,

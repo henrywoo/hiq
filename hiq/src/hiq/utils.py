@@ -335,7 +335,7 @@ def ensure_folder(path_str: str):
             os.makedirs(path_str)
         return path_str
     except PermissionError as e:
-        print(f"permission error: {path_str}")
+        print(f"🦉 Warning: you have no permission to access path: {path_str}")
         raise e
 
 

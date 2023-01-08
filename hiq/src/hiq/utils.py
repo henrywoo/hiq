@@ -1,4 +1,4 @@
-# HiQ version 1.1.6rc2
+# HiQ version 1.1.6rc3
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
@@ -604,7 +604,7 @@ def pretty_time_delta(seconds):
         return "%s%ds" % (sign_string, seconds)
 
 
-def create_gantt_chart_time(data: List[str], fig_path=None, return_as_stream=False):
+def create_gantt_chart_time(data: List[str], fig_path=None, return_as_stream=False, fig_size=(24, 24)):
     """Plot Gantt-chart for HiQ Latency Tree"""
     from hiq import tree
     import pandas as pd
@@ -741,7 +741,7 @@ def create_gantt_chart_time(data: List[str], fig_path=None, return_as_stream=Fal
 
     #### Create Plots ####
     fl = len(all_dfs)
-    fig, ax_plots = plt.subplots(1, fl, figsize=(fl * 10, 7))
+    fig, ax_plots = plt.subplots(1, fl, figsize=(fl * fig_size[0], fig_size[1]))
 
     for i in range(fl):
         if fl == 1:
@@ -1079,6 +1079,8 @@ def __send_http(
         method="get",
 ):
     try:
+        import requests
+
         session = requests.Session()
         session.trust_env = trust_env
         if isinstance(data, dict):

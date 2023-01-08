@@ -5,6 +5,7 @@ cachetools
 psutil
 py-itree
 urllib3
+requests
 
 # basic libs
 ###############################################

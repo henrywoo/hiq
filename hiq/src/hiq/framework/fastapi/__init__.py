@@ -79,22 +79,26 @@ fstr_hiq = hiq.read_file(f"{g_templates_dir}/hiq.html", by_line=False)
 fstr_lat = hiq.read_file(f"{g_templates_dir}/lat.html", by_line=False)
 
 
-def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=8080, worker=1,
+def run_fastapi(driver,
+                app,
+                header_name='X-Request-ID',
+                host='0.0.0.0',
+                port=8080,
+                worker=1,
+                thread_limit=os.cpu_count(),
                 endpoints={'/predict'},
                 generator=lambda: uuid4().hex,
-                templates_dir=g_templates_dir,
-                custom={"/custom": ('get', None)}):
+                custom={"/custom": ('get', None)},
+                app_title="Application",
+                app_version="1.0.0"):
     from fastapi import Request
-    from fastapi.templating import Jinja2Templates
 
-    app.title = "Document OCR"
-    app.description = f"<a href=hiq>HiQ</a>"
-    app.version = "1.0.0"
+    app.title = app_title
+    app.description = "<a href=hiq>HiQ</a>"
+    app.version = app_version
 
-    try:
-        templates = Jinja2Templates(directory=templates_dir)
-    except:
-        templates = None
+    port = int(os.environ.get('HIQ_FLASK_PORT', port))
+    worker = int(os.environ.get('HIQ_FLASK_WORKER', worker))
 
     app.add_middleware(CorrelationIdMiddleware, header_name=header_name)
 
@@ -110,6 +114,12 @@ def run_fastapi(driver, app, header_name='X-Request-ID', host='0.0.0.0', port=80
             return response
         else:
             return await call_next(request)
+
+    @app.on_event("startup")
+    def startup():
+        from anyio.lowlevel import RunVar
+        from anyio import CapacityLimiter
+        RunVar("_default_thread_limiter").set(CapacityLimiter(thread_limit))
 
     def not_implemented_func():
         return "NOT_IMPLEMENTED"

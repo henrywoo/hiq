@@ -71,6 +71,16 @@ From the screenshot we can see the timestamp and the latency of each function:
 
 HiQ just traced the `main.py` file running without touching one line of its code.
 
+### HiQ UI
+
+- Main Page
+
+![HiQ UI Main Page](hiq/docs/source/img/hiq-ui-1.png)
+
+- Latency Details
+
+![HiQ UI Latency Details](hiq/docs/source/img/hiq-ui-2.png)
+
 ## Documentation
 
 **HTML**: [🔗 HiQ Online Documents](https://hiq.readthedocs.io/en/latest/index.html)  | **PDF**: Please check [🔗 HiQ User Guide](hiq/docs/hiq.pdf).

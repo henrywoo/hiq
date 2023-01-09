@@ -170,8 +170,13 @@ def run_fastapi(driver,
         HiQ: {'🟢Enabled' if driver.enabled else '🔴Disabled'},
                                         CPU: {g_cpu_info},
                                         Load: {os.getloadavg()[0]:.2f},
-                                        Memory: {hiq.memory.get_memory_gb():.2f}GB
+                                        Process Memory: {hiq.memory.get_memory_gb():.2f}GB,
+                                        Current System Memory Usage: {hiq.get_system_memory_usage()/(1<<30):.2f}GB,
         '''
+        if hiq.get_system_peak_memory() > 0:
+            basic_info += f"Peak System Memory Usage: {hiq.get_system_peak_memory()/(1<<30):.2f}GB,"
+        basic_info += f"Generated at: {hiq.get_time_str_with_tz()}"
+
         html_resp = fstr_hiq.format(hiq_version=hiq.__version__, basic_info=basic_info, latency=resp)
         return HTMLResponse(content=html_resp, status_code=200)
 

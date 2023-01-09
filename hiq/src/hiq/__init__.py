@@ -65,7 +65,8 @@ try:
         get_memory_mb,
         get_memory_kb,
         get_memory_b,
-        get_system_peak_memory
+        get_system_peak_memory,
+        get_system_memory_usage
     )
 except ImportError:
     pass

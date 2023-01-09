@@ -148,7 +148,7 @@ https://oss.oracle.com/licenses/upl/.
    :target: https://hiq.readthedocs.io/en/latest/
 .. |CodeCov| image:: https://codecov.io/gh/uber/athenadriver/branch/master/graph/badge.svg
    :target: https://github.com/oracle-samples/hiq
-.. |Github release| image:: https://img.shields.io/badge/release-v1.1.6rc1-red
+.. |Github release| image:: https://img.shields.io/badge/release-v1.1.6-red
    :target: https://github.com/oracle-samples/hiq
 .. |lic| image:: https://img.shields.io/badge/License-UPL--1.0-red
    :target: https://github.com/oracle-samples/hiq/blob/main/LICENSE.txt

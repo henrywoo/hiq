@@ -4,7 +4,7 @@ import os
 here = os.path.dirname(os.path.realpath(__file__))
 
 VERSION = (
-    "1.1.6rc4"
+    "1.1.6rc5"
     if "PKG_VERSION" not in os.environ or not os.environ["PKG_VERSION"]
     else os.environ["PKG_VERSION"]
 )

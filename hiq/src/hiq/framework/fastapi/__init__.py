@@ -1,4 +1,4 @@
-# HiQ version 1.1.6rc4
+# HiQ version 1.1.6rc5
 #
 # Copyright (c) 2022, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
@@ -167,9 +167,9 @@ def run_fastapi(driver,
             tmp) + "</table>"
 
         basic_info = f'''
-        HiQ: {'🟢Enabled' if driver.enabled else '🔴Disabled'},
-                                        CPU: {g_cpu_info},
-                                        Load: {os.getloadavg()[0]:.2f},
+        HiQ: {'🟢 Enabled' if driver.enabled else '🔴 Disabled'},
+                                        CPU Type: {g_cpu_info},
+                                        CPU Load: {os.getloadavg()[0]:.2f},
                                         Process Memory: {hiq.memory.get_memory_gb():.2f}GB,
                                         Current System Memory Usage: {hiq.get_system_memory_usage()/(1<<30):.2f}GB,
         '''

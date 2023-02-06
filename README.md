@@ -139,7 +139,7 @@ Copyright (c) 2022 Oracle and/or its affiliates. Released under the Universal Pe
 [cov-img]: https://codecov.io/gh/uber/athenadriver/branch/master/graph/badge.svg
 [cov]: https://hiq.readthedocs.io/en/latest/index.html
 
-[release-img]: https://img.shields.io/badge/release-v1.1.5-red
+[release-img]: https://img.shields.io/badge/release-v1.1.7-red
 [release]: https://github.com/oracle-samples/hiq
 
 [license-img]: https://img.shields.io/badge/License-UPL--1.0-red

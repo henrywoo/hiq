@@ -5,7 +5,7 @@
 #
 
 __author__ = "Fuheng Wu<fuheng.wu@oralce.com>"
-__date__ = "2023-01-01"
+__date__ = "2023-02-01"
 __doc__ = "HiQ is a declarative, non-intrusive, dynamic and transparent tracking and optimization system"
 __version__ = "1.1.7"
 __credits__ = "Henry Wu, Ivan Davchev, Jun Qian"
@@ -51,7 +51,8 @@ from .utils import (
     get_average_loss,
     get_percentage_loss,
     get_time_str_with_tz,
-    down_sample
+    down_sample,
+    bfloat16_supported
 )
 from .tree import (
     get_duration_from_hiq_string,

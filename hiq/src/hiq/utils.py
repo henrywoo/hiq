@@ -1162,6 +1162,15 @@ def get_percentage_loss(a, b):
     return np.abs(np.sum(delta) / np.sum(a))
 
 
+def bfloat16_supported(device_type='cuda'):
+    import torch
+    try:
+        with torch.amp.autocast(device_type=device_type, dtype=torch.bfloat16):
+            return True
+    except:
+        return False
+
+
 if __name__ == "__main__":
     import requests
 
